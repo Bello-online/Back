@@ -40,6 +40,11 @@ app.use(bodyParser.json());
 app.use(express.json());
 app.use(cors());
 
+// Health check route
+app.get('/', (req, res) => {
+  res.send('Backend is running');
+});
+
 // Routes
 app.use('/api/waitlists', waitlistRoutes);
 app.use('/api/users', userRoutes);
