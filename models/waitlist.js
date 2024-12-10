@@ -25,6 +25,14 @@ module.exports = (sequelize, DataTypes) => {
         model: 'Users', 
         key: 'id'
       }
+    },
+    address:{
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    phone: {
+      type: DataTypes.STRING,
+      allowNull: true
     }
   });
 

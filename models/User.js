@@ -30,6 +30,23 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: ''
       }
     });
+
+    // Associations
+  User.associate = (models) => {
+    // One-to-Many: A user (business owner) can create many events
+    User.hasMany(models.Event, {
+      foreignKey: 'ownerId',
+      as: 'ownedEvents',
+      onDelete: 'CASCADE',
+    });
+
+    // Many-to-Many: A user (customer) can participate in many events
+    User.hasMany(models.EventParticipant, {
+      foreignKey: 'userId',
+      as: 'participations',
+      onDelete: 'CASCADE',
+    });
+  };
   
     return User;
   };

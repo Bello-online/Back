@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { Waitlist, WaitlistCustomers, User, Notification  } = require('../models');
+const { Op } = require('sequelize');
 
 
 // Create a new waitlist
@@ -156,37 +157,47 @@ router.get('/:id/customers', async (req, res) => {
   }
 });
 
-// Check for new customers joining waitlists
-// router.get('/notifications', async (req, res) => {
-//   try {
-//     // Here, you could use a more specific query to check for recent join events
-//     // Assuming this returns new join events since the last time checked
-//     const newJoins = await WaitlistCustomers.findAll({
-//       include: [{ model: User, attributes: ['username'] }],
-//       order: [['createdAt', 'DESC']], // Order by latest join events
-//       limit: 5 // Limit the number to the latest 5 join events
-//     });
 
-//     res.json(newJoins);
-//   } catch (error) {
-//     console.error('Error fetching notifications:', error);
-//     res.status(500).json({ error: 'Failed to fetch notifications' });
-//   }
-// });
-
-// Fetch recent notifications
-router.get('/notifications/:userId', async (req, res) => {
-  const { userId } = req.params;
+// Advanced search endpoint
+router.get('/search', async (req, res) => {
   try {
-    const notifications = await Notification.findAll({
-      where: { userId },
-      order: [['createdAt', 'DESC']],
-      limit: 5
+    const { query, ranges, ...filters } = req.query;
+    
+    let whereClause = {};
+    
+    // Handle text search
+    if (query) {
+      whereClause[Op.or] = [
+        { serviceName: { [Op.like]: `%${query}%` } },
+        { status: { [Op.like]: `%${query}%` } },
+        { location: { [Op.like]: `%${query}%` } }
+      ];
+    }
+    
+    // Handle specific field filters
+    Object.entries(filters).forEach(([field, value]) => {
+      if (value) {
+        whereClause[field] = { [Op.like]: `%${value}%` };
+      }
     });
-    res.json(notifications);
+    
+    // Handle range filters
+    if (ranges) {
+      Object.entries(JSON.parse(ranges)).forEach(([field, range]) => {
+        if (range.min || range.max) {
+          whereClause[field] = {
+            ...(range.min && { [Op.gte]: range.min }),
+            ...(range.max && { [Op.lte]: range.max })
+          };
+        }
+      });
+    }
+    
+    const waitlists = await Waitlist.findAll({ where: whereClause });
+    res.status(200).json(waitlists);
   } catch (error) {
-    console.error('Error fetching notifications:', error);
-    res.status(500).json({ error: 'Failed to fetch notifications' });
+    console.error('Error in advanced search:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 

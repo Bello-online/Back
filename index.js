@@ -6,6 +6,7 @@ const cors = require('cors');
 const waitlistRoutes = require('./routes/waitlistRoutes');
 const userRoutes = require('./routes/userRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const eventRoutes = require('./routes/eventRoutes');
 
 const PORT = process.env.PORT || 5000;
 
@@ -49,6 +50,7 @@ app.get('/', (req, res) => {
 app.use('/api/waitlists', waitlistRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/events', eventRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
